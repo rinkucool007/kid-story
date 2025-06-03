@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Storybook for Kids</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'story-blue': '#4299e1',
+                        'story-green': '#48bb78',
+                        'story-yellow': '#ecc94b',
+                        'story-purple': '#9f7aea',
+                        'story-orange': '#ed8936',
+                        'story-pink': '#ed64a6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Comic Neue', cursive;
+            background: linear-gradient(135deg, #f0f9ff, #f0f4ff);
+        }
+        
+        .story-text span {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .highlight {
+            background-color: #ffff00;
+            color: #000 !important;
+            transform: scale(1.1);
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 0 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .character-bounce {
+            animation: bounce 0.5s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .page-turn {
+            animation: pageTurn 0.5s ease-out;
+        }
+        
+        @keyframes pageTurn {
+            from { transform: rotateY(90deg); opacity: 0; }
+            to { transform: rotateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-purple-400 to-blue-500 py-6 text-white shadow-lg">
+        <div class="container mx-auto px-4 flex flex-col items-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-center">Magic Storybook</h1>
+            <p class="mt-2 text-center">Interactive adventures for young readers!</p>
+        </div>
+    </header>
+    
+    <!-- Main Container -->
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Story Tabs -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+            <button data-story="0" class="story-tab active-tab bg-story-blue text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">The Lost Puppy</button>
+            <button data-story="1" class="story-tab bg-story-green text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">Forest Adventure</button>
+            <button data-story="2" class="story-tab bg-story-yellow text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">Space Explorers</button>
+            <button data-story="3" class="story-tab bg-story-purple text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">Mermaid's Pearl</button>
+            <button data-story="4" class="story-tab bg-story-orange text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">Dragon's Egg</button>
+            <button data-story="5" class="story-tab bg-story-pink text-white px-4 py-2 rounded-full shadow hover:shadow-lg transition-all duration-200 text-sm md:text-base">Candy Kingdom</button>
+        </div>
+        
+        <!-- Story Container -->
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden p-6 transition-all duration-300">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Character Area -->
+                <div class="md:w-2/5 flex flex-col items-center">
+                    <div class="relative bg-gradient-to-b from-blue-100 to-white rounded-xl p-4 w-full h-72 flex items-center justify-center">
+                        <div id="character" class="character-bounce">
+                            <img id="voice-animation" src="https://mir-s3-cdn-cf.behance.net/project_modules/max_632/998fe3171675349.6472d19e31239.gif" alt="Voice animation" class="w-60 h-60 object-contain">
+                        </div>
+                        
+                        <div id="speech-bubble" class="absolute top-4 left-0 bg-white p-4 rounded-xl shadow-lg hidden w-3/4">
+                            <div class="text-sm md:text-base" id="bubble-text"></div>
+                            <div class="absolute bottom-0 left-6 transform translate-y-4 rotate-45 w-4 h-4 bg-white"></div>
+                        </div>
+                    </div>
+                    
+                    <button id="speak-btn" class="mt-6 bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2">
+                        <i class="fa-solid fa-volume-high text-xl"></i>
+                        <span>Read Aloud</span>
+                    </button>
+                    
+                    <div class="mt-6 flex flex-col gap-3 w-full">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium">Reading Speed:</span>
+                            <span id="speed-value" class="text-sm">Normal</span>
+                        </div>
+                        <input type="range" min="100" max="300" value="200" class="w-full accent-purple-500" id="speed-slider">
+                        
+                        <div class="mt-4">
+                            <span class="text-sm font-medium block mb-2">Voice:</span>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="voice-type" value="female" checked class="accent-purple-500">
+                                    <span class="text-sm">Female</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="voice-type" value="male" class="accent-purple-500">
+                                    <span class="text-sm">Male</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Story Content -->
+                <div class="md:w-3/5">
+                    <div class="border-4 border-yellow-200 rounded-xl bg-amber-50 p-4 md:p-6 min-h-[320px] page-turn" id="story-content">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-purple-700" id="story-title">The Lost Puppy</h2>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm" id="page-count">Page 1/5</span>
+                        </div>
+                        
+                        <img id="story-image" src="https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg" alt="Story illustration" class="w-full h-48 object-cover rounded-lg mb-4">
+                        
+                        <div class="story-text text-lg leading-relaxed" id="story-text">
+                            <p>Once upon a time, there was a little puppy named Spot who loved to explore. One sunny morning, he wandered too far from home and found himself lost in the big, bustling park. Spot felt scared as he looked around at the unfamiliar sights.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <div class="flex justify-between mt-6">
+                        <button id="prev-btn" class="bg-gradient-to-r from-blue-400 to-blue-600 text-white py-2 px-4 rounded-lg shadow transition-all duration-300 hover:from-blue-500 hover:to-blue-700 flex items-center disabled:opacity-50" disabled>
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Previous Page
+                        </button>
+                        <button id="next-btn" class="bg-gradient-to-r from-green-400 to-green-600 text-white py-2 px-4 rounded-lg shadow transition-all duration-300 hover:from-green-500 hover:to-green-700 flex items-center">
+                            Next Page <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>Interactive Storybook for Kids © 2025</p>
+            <div class="mt-4 flex justify-center gap-4 text-xl">
+                <button class="text-pink-400 hover:text-pink-300"><i class="fa-solid fa-rotate-right"></i></button>
+                <button class="text-yellow-400 hover:text-yellow-300"><i class="fa-solid fa-print"></i></button>
+                <button class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-music"></i></button>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Story data
+        const stories = [
+            {
+                title: "The Lost Puppy",
+                pages: [
+                    {
+                        image: "https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg",
+                        text: "Once upon a time, there was a little puppy named Spot who loved to explore. One sunny morning, he wandered too far from home and found himself lost in the big, bustling park. Spot felt scared as he looked around at the unfamiliar sights."
+                    },
+                    {
+                        image: "https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg",
+                        text: "Spot saw a family having a picnic under a big oak tree. He trotted over and wagged his tail. A kind girl named Lily noticed the lost puppy. She offered him a piece of her sandwich and gently asked, 'Are you lost, little puppy?'"
+                    },
+                    {
+                        image: "https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg",
+                        text: "Lily checked Spot's collar and found his owner's phone number. She called Spot's owner, Mrs. Johnson. 'I've found your puppy at the park!' Lily said happily. Mrs. Johnson was so relieved and quickly drove to the park."
+                    },
+                    {
+                        image: "https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg",
+                        text: "When Mrs. Johnson arrived, Spot jumped for joy! His tail wagged so fast it looked like a blur. Lily received a big thank you and a promise to visit Spot anytime. Spot learned to stay closer to home on his adventures."
+                    },
+                    {
+                        image: "https://img.freepik.com/free-photo/3d-rendering-cartoon-like-dog_23-2150780898.jpg",
+                        text: "From that day on, Spot and Lily became best friends. They played together in the park every Saturday. Spot still loved exploring, but now he always stayed where Lily could see him. They had many wonderful adventures together!"
+                    }
+                ]
+            },
+            {
+                title: "Forest Adventure",
+                pages: [
+                    {
+                        image: "https://cdn.dribbble.com/userupload/39237405/file/original-aacf46060aef07448fa0ab2c23f2a8fd.gif",
+                        text: "Emma and her brother Noah loved exploring the woods behind their house. One bright morning, they packed sandwiches and set off to follow a mysterious path they'd never noticed before."
+                    },
+                    {
+                        image: "https://cdn.dribbble.com/userupload/39237405/file/original-aacf46060aef07448fa0ab2c23f2a8fd.gif",
+                        text: "Deep in the forest, they discovered a magical glowing mushroom that sparkled in rainbow colors. Suddenly, a friendly hedgehog named Hazel appeared and whispered, 'Follow me to the Secret Grove!'"
+                    },
+                    {
+                        image: "https://cdn.dribbble.com/userupload/39237405/file/original-aacf46060aef07448fa0ab2c23f2a8fd.gif",
+                        text: "Hazel led them to a clearing where animals could talk! They met singing bluebirds and a wise old owl who knew all the forest's secrets. The owl showed them how to talk to trees."
+                    },
+                    {
+                        image: "https://cdn.dribbble.com/userupload/39237405/file/original-aacf46060aef07448fa0ab2c23f2a8fd.gif",
+                        text: "When dark clouds appeared suddenly, the children worried about getting home. A majestic stag guided them to a dry cave where they shared their sandwiches with all their new animal friends."
+                    },
+                    {
+                        image: "https://cdn.dribbble.com/userupload/39237405/file/original-aacf46060aef07448fa0ab2c23f2a8fd.gif",
+                        text: "As the rain stopped, a shimmering rainbow bridge appeared, leading them right back to their garden gate. They promised Hazel to return every Sunday to learn more forest magic."
+                    }
+                ]
+            },
+            {
+                title: "Space Explorers",
+                pages: [
+                    {
+                        image: "https://media0.giphy.com/media/6LnyKO4YqZPZFrcooS/giphy.gif?cid=6c09b9526hyzdo9zd5b1b5efeeod3x8035dd41hptub1mvwv&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=g",
+                        text: "Leo and Maya built a cardboard rocket ship in their garage. When they pressed the red button they painted, the ship magically lifted off and flew through the sky!"
+                    },
+                    {
+                        image: "https://media0.giphy.com/media/6LnyKO4YqZPZFrcooS/giphy.gif?cid=6c09b9526hyzdo9zd5b1b5efeeod3x8035dd41hptub1mvwv&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=g",
+                        text: "They arrived on the Moon where friendly aliens with three eyes invited them to bounce on the craters. They learned that the Moon's cheese was actually made of magical star stuff!"
+                    },
+                    {
+                        image: "https://media0.giphy.com/media/6LnyKO4YqZPZFrcooS/giphy.gif?cid=6c09b9526hyzdo9zd5b1b5efeeod3x8035dd41hptub1mvwv&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=g",
+                        text: "Next stop: Jupiter! They floated through swirling red and gold clouds, surfing on rainbow-colored gas ribbons. They met space whales singing beautiful songs."
+                    },
+                    {
+                        image: "https://media0.giphy.com/media/6LnyKO4YqZPZFrcooS/giphy.gif?cid=6c09b9526hyzdo9zd5b1b5efeeod3x8035dd41hptub1mvwv&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=g",
+                        text: "Suddenly, a meteor shower appeared! They dodged the sparkly rocks by hopping from asteroid to asteroid. One asteroid had a little door where star fairies lived inside!"
+                    },
+                    {
+                        image: "https://media0.giphy.com/media/6LnyKO4YqZPZFrcooS/giphy.gif?cid=6c09b9526hyzdo9zd5b1b5efeeod3x8035dd41hptub1mvwv&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=g",
+                        text: "With the setting of the Space Sun, they knew it was time to return home. The aliens gave them moon cheese sandwiches for the trip. They landed back in their garage just in time for dinner."
+                    }
+                ]
+            },
+            {
+                title: "Mermaid's Pearl",
+                pages: [
+                    {
+                        image: "https://www.animatedimages.org/data/media/1355/animated-mermaid-image-0011.gif",
+                        text: "Isla found a beautiful pearl on the beach that glowed with magical light. When she held it to the ocean, a shimmering pathway appeared on the water's surface."
+                    },
+                    {
+                        image: "https://www.animatedimages.org/data/media/1355/animated-mermaid-image-0011.gif",
+                        text: "Following the path, she met Coral, a cheerful mermaid who explained that Isla's pearl was the lost Heart of the Ocean. Together they swam to the Coral Palace for the Pearl Ceremony."
+                    },
+                    {
+                        image: "https://www.animatedimages.org/data/media/1355/animated-mermaid-image-0011.gif",
+                        text: "In the palace garden of bioluminescent flowers, they faced the tricky currents of the Whirlpool Maze. With teamwork and Coral's singing, they navigated through safely."
+                    },
+                    {
+                        image: "https://www.animatedimages.org/data/media/1355/animated-mermaid-image-0011.gif",
+                        text: "A grumpy octopus guarded the Pearl Altar. Isla gave him a pretty seashell from her pocket, and he happily moved aside. They placed the pearl in its rightful place."
+                    },
+                    {
+                        image: "https://www.animatedimages.org/data/media/1355/animated-mermaid-image-0011.gif",
+                        text: "The ocean sparkled brighter than ever as the pearl magic spread. The mermaids gave Isla a magic pearl necklace so she could visit anytime. Waves gently carried her back to shore."
+                    }
+                ]
+            },
+            {
+                title: "Dragon's Egg",
+                pages: [
+                    {
+                        image: "https://i.seadn.io/s/raw/files/4ef6a49cdddb74db541e0e8bccd53373.gif?auto=format&dpr=1&w=3840",
+                        text: "Ben discovered a strange, warm egg in the mountains while hiking. It was as big as a soccer ball and had red and gold swirls all over it."
+                    },
+                    {
+                        image: "https://i.seadn.io/s/raw/files/4ef6a49cdddb74db541e0e8bccd53373.gif?auto=format&dpr=1&w=3840",
+                        text: "That night, the egg hatched! Out came a tiny dragon with shimmering blue scales. Ben named him Spark. Spark sneezed and made tiny fireworks in the air!"
+                    },
+                    {
+                        image: "https://i.seadn.io/s/raw/files/4ef6a49cdddb74db541e0e8bccd53373.gif?auto=format&dpr=1&w=3840",
+                        text: "Spark grew faster than any animal Ben knew. Soon he was big enough for Ben to ride! They flew over mountains, rivers, and forests. Spark's favorite thing was chasing clouds."
+                    },
+                    {
+                        image: "https://i.seadn.io/s/raw/files/4ef6a49cdddb74db541e0e8bccd53373.gif?auto=format&dpr=1&w=3840",
+                        text: "One stormy day, Spark saved a stranded hot air balloon. He blew warm air to fill the balloon again. The passengers cheered! From then on, Spark became the village's special weather dragon."
+                    },
+                    {
+                        image: "https://i.seadn.io/s/raw/files/4ef6a49cdddb74db541e0e8bccd53373.gif?auto=format&dpr=1&w=3840",
+                        text: "As Spark grew to adult size, Ben knew it was time for him to join the Dragon Council. At their farewell party, Spark gave Ben one of his scales that would always glow when they thought of each other."
+                    }
+                ]
+            },
+            {
+                title: "Candy Kingdom",
+                pages: [
+                    {
+                        image: "https://pa1.aminoapps.com/6248/7737c5d4cbdf48b7a9abb983693a63169d84e2bc_hq.gif",
+                        text: "Zoe and Alex followed a rainbow-striped butterfly to a magical place where everything was made of candy! Trees had lollipop leaves and chocolate river flowed through the valley."
+                    },
+                    {
+                        image: "https://pa1.aminoapps.com/6248/7737c5d4cbdf48b7a9abb983693a63169d84e2bc_hq.gif",
+                        text: "In Candy Town, they met Sir Gumdrop who was upset. The Chocolate Fountain had stopped flowing! Without its magic chocolate, the Candy Kingdom would melt in the sun."
+                    },
+                    {
+                        image: "https://pa1.aminoapps.com/6248/7737c5d4cbdf48b7a9abb983693a63169d84e2bc_hq.gif",
+                        text: "The friends followed the chocolate river upstream. They found that rock candy boulders had blocked the flow. With help from jellybean squirrels, they broke the candy blockade."
+                    },
+                    {
+                        image: "https://pa1.aminoapps.com/6248/7737c5d4cbdf48b7a9abb983693a63169d84e2bc_hq.gif",
+                        text: "At the fountain, they discovered the Strawberry Swirl Switch was stuck. With their last fruit chew, they greased the gears. Chocolate flowed again! The kingdom was saved!"
+                    },
+                    {
+                        image: "https://pa1.aminoapps.com/6248/7737c5d4cbdf48b7a9abb983693a63169d84e2bc_hq.gif",
+                        text: "For their heroism, King Candy gave them a lifetime supply of magic candy seeds. Back home, they planted the seeds and grew a small candy garden that never stopped giving treats."
+                    }
+                ]
+            }
+        ];
+
+        // Global variables
+        let currentStory = 0;
+        let currentPage = 0;
+        let isSpeaking = false;
+        let wordIndex = 0;
+        let speechInterval;
+        let wordDelay = 500;
+
+        // DOM elements
+        const storyTabs = document.querySelectorAll('.story-tab');
+        const storyTitle = document.getElementById('story-title');
+        const storyImage = document.getElementById('story-image');
+        const storyText = document.getElementById('story-text');
+        const pageCount = document.getElementById('page-count');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const speakBtn = document.getElementById('speak-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const character = document.getElementById('character');
+        const speechBubble = document.getElementById('speech-bubble');
+        const bubbleText = document.getElementById('bubble-text');
+        const storyContent = document.getElementById('story-content');
+        const voiceAnimation = document.getElementById('voice-animation');
+
+        // Initialize the story
+        function initStory() {
+            loadStory();
+            setupEventListeners();
+            updateSpeedText(speedSlider.value);
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            storyTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    storyTabs.forEach(t => t.classList.remove('active-tab'));
+                    tab.classList.add('active-tab');
+                    currentStory = parseInt(tab.dataset.story);
+                    currentPage = 0;
+                    loadStory();
+                });
+            });
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    loadPage();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < stories[currentStory].pages.length - 1) {
+                    currentPage++;
+                    loadPage();
+                }
+            });
+            
+            speakBtn.addEventListener('click', toggleSpeak);
+            
+            speedSlider.addEventListener('input', () => {
+                updateSpeedText(speedSlider.value);
+                wordDelay = calculateWordDelay(speedSlider.value);
+                if (isSpeaking) {
+                    stopSpeaking();
+                    startSpeaking();
+                }
+            });
+
+            document.querySelectorAll('input[name="voice-type"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    updateVoice();
+                    const voiceType = radio.value;
+                    voiceAnimation.src = voiceType === 'female' 
+                        ? 'https://mir-s3-cdn-cf.behance.net/project_modules/max_632/998fe3171675349.6472d19e31239.gif'
+                        : 'https://assets-v2.lottiefiles.com/a/7f1f4d06-1180-11ee-a95d-f72567547c7a/KHOzQvRUfE.gif';
+                    if (isSpeaking) {
+                        stopSpeaking();
+                        startSpeaking();
+                    }
+                });
+            });
+        }
+
+        // Calculate word delay based on slider value
+        function calculateWordDelay(speed) {
+            // Map speed value to delay (in ms)
+            // Higher speed value means faster speaking = smaller delay
+            return 700 - (speed * 2);
+        }
+
+        // Update speed display text
+        function updateSpeedText(value) {
+            const speeds = ['Slow', 'Normal', 'Fast'];
+            const index = Math.floor((value - 100) / 67); // 67 = (300-100)/3
+            speedValue.textContent = speeds[index];
+        }
+
+        // Load the current story
+        function loadStory() {
+            const story = stories[currentStory];
+            storyTitle.textContent = story.title;
+            loadPage();
+        }
+
+        // Load the current page
+        function loadPage() {
+            const page = stories[currentStory].pages[currentPage];
+            
+            // Update content
+            storyImage.src = page.image;
+            storyText.innerHTML = `<p>${page.text}</p>`;
+            pageCount.textContent = `Page ${currentPage + 1}/${stories[currentStory].pages.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === stories[currentStory].pages.length - 1;
+            
+            // Add page turn animation
+            storyContent.classList.remove('page-turn');
+            setTimeout(() => {
+                storyContent.classList.add('page-turn');
+            }, 50);
+            
+            // Stop any ongoing speaking
+            stopSpeaking();
+            speechBubble.classList.add('hidden');
+        }
+
+        // Toggle speaking
+        function toggleSpeak() {
+            if (isSpeaking) {
+                stopSpeaking();
+            } else {
+                startSpeaking();
+            }
+        }
+
+        // Speech synthesis variables
+        let speechSynthesis = window.speechSynthesis;
+        let speechUtterance = null;
+        let voices = [];
+        let currentVoice = null;
+
+        // Load available voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            // Try to find a child-friendly voice
+            const preferredVoice = voices.find(voice => 
+                voice.name.includes('Child') || 
+                voice.name.includes('Kids') ||
+                voice.lang.includes('en')
+            ) || voices[0];
+            
+            // Set initial voice based on selection
+            updateVoice();
+            return preferredVoice;
+        }
+
+        // Update voice based on selection
+        function updateVoice() {
+            const voiceType = document.querySelector('input[name="voice-type"]:checked').value;
+            const englishVoices = voices.filter(voice => voice.lang.includes('en'));
+            
+            if (voiceType === 'female') {
+                currentVoice = englishVoices.find(voice => 
+                    voice.name.toLowerCase().includes('female') || 
+                    voice.name.includes('Woman') ||
+                    voice.name.includes('Alice') || 
+                    voice.name.includes('Zira')
+                ) || englishVoices[0];
+            } else {
+                currentVoice = englishVoices.find(voice => 
+                    voice.name.toLowerCase().includes('male') || 
+                    voice.name.includes('Man') ||
+                    voice.name.includes('David') || 
+                    voice.name.includes('Mark')
+                ) || englishVoices[0];
+            }
+        }
+
+        // Start speaking the page
+        function startSpeaking() {
+            if (isSpeaking) return;
+            
+            const pageText = stories[currentStory].pages[currentPage].text;
+            const words = pageText.split(' ');
+            const textElement = storyText.querySelector('p');
+            
+            // Prepare the text for highlighting
+            let highlightedText = '';
+            words.forEach((word, index) => {
+                highlightedText += `<span class="word" data-index="${index}">${word}</span> `;
+            });
+            textElement.innerHTML = highlightedText;
+            
+            // Show speech bubble
+            speechBubble.classList.remove('hidden');
+            
+            // Start the character animation
+            character.classList.add('character-bounce');
+            
+            // Set initial state
+            wordIndex = 0;
+            isSpeaking = true;
+            speakBtn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause Reading`;
+            bubbleText.textContent = words.slice(0, 5).join(' ') + '...';
+            
+            // Initialize speech synthesis
+            speechUtterance = new SpeechSynthesisUtterance(pageText);
+            speechUtterance.voice = currentVoice;
+            speechUtterance.rate = 0.8 + (speedSlider.value / 500); // Adjust rate based on speed
+            speechUtterance.pitch = 1.2; // Higher pitch for child-friendly voice
+            
+            // Create interval to highlight words
+            speechInterval = setInterval(() => {
+                const wordElements = textElement.querySelectorAll('.word');
+                
+                // Remove previous highlight
+                if (wordIndex > 0) {
+                    wordElements[wordIndex-1].classList.remove('highlight');
+                }
+                
+                // Highlight current word
+                if (wordIndex < words.length) {
+                    wordElements[wordIndex].classList.add('highlight');
+                    
+                    // Update speech bubble
+                    const start = Math.max(0, wordIndex - 2);
+                    const end = Math.min(words.length, wordIndex + 3);
+                    bubbleText.textContent = words.slice(start, end).join(' ') + (end < words.length ? '...' : '');
+                    
+                    wordIndex++;
+                }
+                
+                // Stop when we've reached the end
+                if (wordIndex >= words.length) {
+                    stopSpeaking();
+                }
+            }, wordDelay);
+            
+            // Start speaking
+            speechSynthesis.speak(speechUtterance);
+            
+            // Handle when speech ends
+            speechUtterance.onend = () => {
+                stopSpeaking();
+            };
+        }
+
+        // Stop speaking
+        function stopSpeaking() {
+            if (!isSpeaking) return;
+            
+            clearInterval(speechInterval);
+            speechSynthesis.cancel();
+            isSpeaking = false;
+            character.classList.remove('character-bounce');
+            speakBtn.innerHTML = `<i class="fa-solid fa-volume-high"></i> Read Aloud`;
+            
+            // Hide speech bubble after a delay
+            setTimeout(() => {
+                speechBubble.classList.add('hidden');
+            }, 1000);
+        }
+
+        // Initialize the storybook when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load voices when they become available
+            speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+            initStory();
+        });
+    </script>
+</body>
+</html>
